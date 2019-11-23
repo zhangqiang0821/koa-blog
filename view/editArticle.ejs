@@ -1,0 +1,238 @@
+<%- include('header') %>
+<link href="https://cdn.bootcss.com/cropperjs/1.3.3/cropper.min.css" rel="stylesheet">
+<div class="ui grid article-create">
+    <div class="sixteen wide column">
+        <div class="ui form segment">
+            <div class="field sixteen inline required" style="display: flex;">
+              <div>
+                <div class="ui selection dropdown">
+                  <input name="gender" type="hidden" value="default">
+                  <i class="dropdown icon"></i>
+                  <div class="text">请选择</div>
+                  <div class="menu">
+                      <div class="item" data-value="default">请选择</div>
+                  </div>
+               </div>
+             </div>
+              <div class="ui labeled input" style="margin-right: 0.85714286em; flex: 1;">
+                <div class="ui label">标题</div>
+                <input name="title" type="text" value="<%= article.title %>" placeholder="请填写标题...">
+              </div>
+              <div>
+                <input class="ui green button trigger-submit" type="button" value="发布文章">
+              </div>
+            </div>
+            <div class="content-box">
+              <div class="cotent">
+                <textarea name="content" cols="30" rows="30"><%= article.content %></textarea>
+              </div>
+              <div class="display-box">
+                <div class="arrow-box">
+                  <i class="angle right icon"></i>
+                  <i style="display: none;" class="angle left icon"></i>
+                </div>
+                <div class="display-content"></div>
+              </div>
+            </div>
+        </div>
+        <!-- 提交文章盒子 -->
+        <div class="ui dimmer modals page transition">
+          <div class="ui test submit-box modal transition hidden">
+            <div class="header">发布文章</div>
+            <div class="content">
+              <div class="ui form">
+                <div class="inline fields">
+                  <div class="sixteen wide field">
+                    <label style="width: 6em">添加头图</label>
+                    <div class="article-titleImg">
+                      <img src="/img/<%= article.picture %>" alt="">
+                      <div class="icon-box">
+                        <i class="camera icon"></i>
+                      </div>
+                      <input type="file" name="titleImg" value="">
+                    </div>
+                  </div>
+                </div>
+                <div class="inline fields">
+                  <div class="sixteen wide field">
+                    <label style="width: 6em">添加标签</label>
+                    <input type="text" name="tag" value="<%= article.tag %>" placeholder="请输入标签...">
+                  </div>
+                </div>
+                <div class="inline fields">
+                  <div class="sixteen wide field">
+                    <label style="width: 6em">添加摘要</label>
+                    <textarea name="abstract" cols="30" rows="5" placeholder="请输入摘要..."><%= article.abstract %></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="actions">
+              <div class="cancelSubmit ui red button">
+                取消
+              </div>
+              <div id="submit" class="ui green button">
+                确定
+              </div>
+            </div>
+            <div class="cropper-box">
+              <img id="img" src="" alt="">
+              <div class="commands">
+                <button class="cancel-cropper" type="button" name="button">取消裁剪</button>
+                <button class="rotate-cropper" type="button" name="button">旋转90度</button>
+                <button class="complete-cropper" type="button" name="button">完成裁剪</button>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.bootcss.com/cropperjs/1.3.3/cropper.min.js"></script>
+<script src="https://cdn.bootcss.com/markdown-it/8.4.1/markdown-it.min.js"></script>
+<script type="text/javascript">
+  var articleType = '0'
+  // 上传文章头图相关
+  $('.article-titleImg').mouseenter(function () {
+    $(this).removeClass('animate-boxShadow-none').addClass('animate-boxShadow')
+  })
+  $('.article-titleImg').mouseleave(function () {
+    $(this).addClass('animate-boxShadow-none').removeClass('animate-boxShadow')
+  })
+  $('.article-titleImg').click(function (e) {
+    $(this).find('input').trigger('click')
+  })
+  $('.article-titleImg input').click(function (e) {
+    e.stopPropagation()
+  })
+  $('.article-titleImg input').change(function (e) {
+    outputImg(this.files[0], function (base64) {
+      $('#img').attr('src', base64)
+      $('.cropper-box').css('display', 'block')
+      var cropper = new Cropper($('#img')[0], {
+        dragMode: 'move',
+    	  aspectRatio: 2,
+    	  viewMode: 1,
+        restore: false,
+    	  guides: false,
+    	  cropBoxMovable: false,
+    	  cropBoxResizable: false,
+    	  toggleDragModeOnDblclick: false,
+        ready: function () {
+          $('.cropper-box .commands .complete-cropper').bind('click', function () {
+            var canvas = cropper.getCroppedCanvas()
+            if (canvas) {
+              cropper.destroy()
+              $('.article-titleImg img').attr('src', canvas.toDataURL())
+              $('.article-titleImg').find('input').val('')
+              $('.cropper-box').css('display', 'none')
+            }
+          })
+          $('.cropper-box .commands .rotate-cropper').bind('click', function () {
+            cropper.rotate(90);
+          })
+          $('.cropper-box .commands .cancel-cropper').bind('click', function () {
+            cropper.destroy()
+            $('.cropper-box').css('display', 'none')
+          })
+        }
+      });
+    })
+  })
+  //唤起发表文章盒子
+  $('.trigger-submit').click(function () {
+    if (articleType === '0') {
+      $('<div>请选择文章类型</div>').toast(3000)
+      return 0;
+    }
+    if ($('[name=title]').val().length <= 0) {
+      $('<div>请填写文章标题</div>').toast(3000)
+      return 0;
+    }
+    if ($('[name=content]').val().length <= 0) {
+      $('<div>请填写文章内容</div>').toast(3000)
+      return 0;
+    }
+    $('.submit-box.submit-box.modal').modal('show')
+  })
+  $('.cancelSubmit').click(function () {
+    $('.submit-box.submit-box.modal').modal('hide')
+  })
+  // 初始化文章类型选项
+  $('.article-create .ui.dropdown').dropdown({
+    values: [
+      {
+        name: '原创',
+        value: '1',
+        selected: '<%= article.type %>' === '1'
+      },
+      {
+        name: '转载',
+        value: '2',
+        selected: '<%= article.type %>' === '2'
+      },
+      {
+        name: '翻译',
+        value: '2',
+        selected: '<%= article.type %>' === '3'
+      }
+    ],
+    onChange: function (value, text, $selectedItem) {
+      articleType = value
+    }
+  })
+  // markdown 转换预览
+  var md = window.markdownit()
+  $('.display-content').html(md.render($('[name=content]').val()))
+  $('[name=content]').keyup(function () {
+    $('.display-content').html(md.render($(this).val()))
+  })
+  $('.display-content').css('height', $('.cotent').css('height'))
+  $('.angle.right.icon').click(function () {
+    $('.cotent').css('width', '100%')
+    $('.display-box').css('width', 0)
+    $(this).css('display', 'none')
+    $('.angle.left.icon').css('display', 'block')
+  })
+  $('.angle.left.icon').click(function () {
+    $('.cotent').css('width', '50%')
+    $('.display-box').css('width', '50%')
+    $(this).css('display', 'none')
+    $('.angle.right.icon').css('display', 'block')
+  })
+  // 发表文章
+  $('#submit').click(function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $.ajax({
+      url: '/article/<%= article.id %>/edit',
+      type: 'post',
+      data: {
+        title: $('[name=title]').val(),
+        content: $('[name=content]').val(),
+        type: articleType,
+        tag: $('[name=tag]').val(),
+        picture: $('.article-titleImg img').attr('src'),
+        abstract: $('[name=abstract]').val(),
+      },
+      dataType: 'json',
+      success: function (res) {
+        $('<div>' + res.msg + '</div>').toast(3000, function () {
+          location.href = '/article/author/<%= app.session.userInfo.username %>'
+        })
+      }
+    })
+  })
+  // 上传图片输出base64
+  function outputImg (file, callback) {
+    if (!/image\/\w+/.test(file.type)) {
+      $('<div>上传的文件必须为图片</div>').toast(3000)
+      return false
+    }
+    var reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = function (e) {
+      callback(e.target.result)
+    }
+  }
+</script>
+<%- include('footer') %>

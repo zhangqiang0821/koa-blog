@@ -1,0 +1,245 @@
+<%- include('header') %>
+<div class="ui main text container article">
+  <% if (article.picture) { %>
+  <div class="text-center">
+    <img style="width: 100%" src="/img/<%= article.picture %>" alt="">
+  </div>
+  <% } %>
+  <h1><%= article.title %></h1>
+  <div class="flex user-info">
+    <div class="avatar-box">
+      <% if (article.source === 'native') { %>
+        <img src="/img/<%= article.avatar %>" alt="">
+      <% } else { %>
+        <img src="<%= article.avatar %>" alt="">
+      <% } %>
+    </div>
+    <div class="user-content">
+      <p><%= article.username %></p>
+      <p class="sign"><%= article.sign %></p>
+    </div>
+    <div style="color: rgba(0,0,0,.4);">
+      <span data-tooltip="本文浏览量">
+        <i class="eye icon"></i> <%= article.pv %>
+      </span>
+      <span style="display: block;" data-tooltip="被喜欢数" data-position="bottom center">
+        <% if (article.allowLike) { %>
+        <i id="heart" class="heart outline icon add-heart"></i>
+        <% } else { %>
+        <i id="heart" class="heart icon remove-heart"></i>
+        <% } %>
+        <span><%= article.likes %></span>
+      </span>
+    </div>
+  </div>
+  <div class="content">
+    <%- article.content %>
+  </div>
+  <h4 class="ui horizontal divider header">
+    <i class="comment alternate outline"></i>
+    评论区
+  </h4>
+  <div class="comment-outline-box flex">
+    <% if (app.session.userInfo) { %>
+    <div class="avatar-box">
+      <a href="/article/author/<%= app.session.userInfo.username %>">
+        <% if (app.session.userInfo.source === 'native') { %>
+        <img src="/img/<%= app.session.userInfo.avatar %>" alt="">
+        <% } else { %>
+        <img src="<%= app.session.userInfo.avatar %>" alt="">
+        <% } %>
+      </a>
+    </div>
+    <div class="comment-box">
+      <textarea name="name" rows="3" placeholder="写下你的评论..."></textarea>
+      <div class="">
+        <button class="ui button" type="button" name="button">取消</button>
+        <button style="background-color: #21ba45; color: #fff;" class="ui button submit-comment-btn" type="button" name="button">发送</button>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="login-register-box">
+      <div class="warn-box">
+        目前您尚未登录，请 <a href="/signin">登录</a> 或 <a href="signup">注册</a> 后进行评论
+      </div>
+    </div>
+    <% } %>
+  </div>
+  <% if (article.comments.length) { %>
+  <!-- 评论 -->
+  <div class="ui comments" style="padding-bottom: 3em;">
+    <% article.comments.forEach(function (comment, index) { %>
+    <div class="comment">
+      <a class="avatar">
+        <% if (comment.source === 'native') { %>
+        <img src="/img/<%= comment.avatar %>">
+        <% } else { %>
+        <img src="<%= comment.avatar %>">
+        <% } %>
+      </a>
+      <div class="content">
+        <a class="author"><%= comment.username %></a>
+        <div class="metadata">
+          <span class="date"><%= comment.countdown %></span>
+        </div>
+        <div class="text">
+          <%= comment.content %>
+        </div>
+        <% if (app.session.userInfo) { %>
+        <div class="actions">
+          <a class="reply">回复</a>
+        </div>
+        <form style="display: none;" class="ui reply form">
+          <div class="field">
+            <textarea></textarea>
+          </div>
+          <div class="ui submit labeled icon button cancel-reply-btn">
+            <i class="icon edit"></i>取消
+          </div>
+          <div data-id="<%= comment.id %>" class="ui green submit labeled icon button add-reply-btn">
+            <i class="icon edit"></i>添加回复
+          </div>
+        </form>
+        <% } %>
+      </div>
+      <% if(comment.replys) { %>
+      <!-- 评论回复 -->
+      <% comment.replys.forEach(function (reply) { %>
+        <div class="comments">
+          <div class="comment">
+            <a class="avatar">
+              <% if (reply.source === 'native') { %>
+              <img src="/img/<%= reply.avatar %>">
+              <% } else { %>
+              <img src="<%= reply.avatar %>">
+              <% } %>
+            </a>
+            <div class="content">
+              <a class="author"><%= reply.username %></a>
+              <div class="metadata">
+                <span class="date"><%= reply.create_time %></span>
+              </div>
+              <div class="text">
+                <%= reply.content %>
+              </div>
+              <% if (app.session.userInfo) { %>
+              <div class="actions">
+                <a class="reply">回复</a>
+              </div>
+              <form style="display: none;" class="ui reply form">
+                <div class="field">
+                  <textarea></textarea>
+                </div>
+                <div class="ui submit labeled icon button cancel-reply-btn">
+                  <i class="icon edit"></i>取消
+                </div>
+                <div data-id="<%= comment.id %>" class="ui green submit labeled icon button add-reply-btn">
+                  <i class="icon edit"></i>添加回复
+                </div>
+              </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+      <% } %>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+<% if (app.session.userInfo) { %>
+<script type="text/javascript">
+  // 提交评论
+  $('.submit-comment-btn').click(function () {
+    $.ajax({
+      url: '/comment',
+      type: 'post',
+      data: {
+        articleId: '<%= article.id %>',
+        comment: $('.comment-box textarea').val()
+      },
+      success (res) {
+        if (res.code === 1) {
+          $('<div>' + res.msg + '</div>').toast(2000, function () {
+            location.reload()
+          })
+        } else {
+          $('<div>' + res.msg + '</div>').toast(2000)
+        }
+      }
+    })
+  })
+  // 回复评论
+  $('.reply').click(function (e) {
+    $(e.target).parent().next('form').fadeIn()
+  })
+
+  $('.cancel-reply-btn').click(function (e) {
+    $(e.target).parents('form').fadeOut()
+  })
+
+  $('.add-reply-btn').click(function (e) {
+    var commentId = $(e.target)[0].nodeName === 'I' ? $(e.target).parents('.add-reply-btn').attr('data-id') : $(e.target).attr('data-id')
+    var content = $(e.target)[0].nodeName === 'I' ? $(e.target).parents('.add-reply-btn').prevAll('.field').find('textarea').val() : $(e.target).prevAll('.field').find('textarea').val()
+    $.ajax({
+      url: '/comment/reply',
+      type: 'post',
+      data: {
+        articleId: '<%= article.id %>',
+        author: '<%= app.session.userInfo.sourceId %>',
+        commentId: commentId,
+        content:content
+      },
+      success (res) {
+        if (res.code === 1) {
+          $('<div>' + res.msg + '</div>').toast(2000, function () {
+            location.reload()
+          })
+        } else {
+          $('<div>' + res.msg + '</div>').toast(2000)
+        }
+      }
+    })
+  })
+</script>
+<% } %>
+<script type="text/javascript">
+  // 点赞
+  $('#heart').click(function () {
+    if ($(this).hasClass('add-heart')) {
+      $.ajax({
+        url: '/like/add',
+        type: 'get',
+        data: {
+          articleId: '<%= article.id %>'
+        },
+        success (res) {
+          console.log(this)
+          $('<div>' + res.msg + '</div>').toast(2000)
+          if (res.code === 1) {
+            $('#heart').next('span').text(res.data.count)
+            $('#heart').addClass('remove-heart').removeClass('add-heart').removeClass('outline')
+          }
+        }
+      })
+    } else if ($(this).hasClass('remove-heart')) {
+      $.ajax({
+        url: '/like/delete',
+        type: 'get',
+        data: {
+          articleId: '<%= article.id %>'
+        },
+        success (res) {
+          console.log(this)
+          $('<div>' + res.msg + '</div>').toast(2000)
+          if (res.code === 1) {
+            $('#heart').next('span').text(res.data.count)
+            $('#heart').addClass('add-heart').addClass('outline').removeClass('remove-heart')
+          }
+        }
+      })
+    }
+  })
+</script>
+<%- include('footer') %>

@@ -1,0 +1,10 @@
+<%- include('header') %>
+<div class="ui main text container" id="main">
+  <%- include('components/article-list', {articles, target: 'index'}) %>
+  <% if (!app.session.userInfo) { %>
+  <div class="">
+    登录一下?
+  </div>
+  <% } %>
+</div>
+<%- include('footer') %>

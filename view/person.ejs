@@ -1,0 +1,47 @@
+<%- include('header') %>
+<div class="ui main text container">
+  <div class="ui items">
+    <div class="item">
+      <div class="image" style="min-width: 150px;">
+        <% if (app.session.userInfo.source === 'native') { %>
+        <img src="/img/<%= app.session.userInfo.avatar %>">
+        <% } else if (app.session.userInfo.source === 'github') {%>
+        <img src="<%= app.session.userInfo.avatar %>" alt="">
+        <% } %>
+      </div>
+      <div class="content">
+        <a class="header"><%= app.session.userInfo.username %></a>
+        <div class="meta">
+          <span><%= app.session.userInfo.sign %></span>
+        </div>
+        <div class="description">
+          <p></p>
+        </div>
+        <div class="extra">
+          <div class="ui mini horizontal divided list">
+            <div class="item">
+              <a class="ui label">
+                访问量
+                <div class="detail"><%= staticties.pvCount %></div>
+              </a>
+            </div>
+            <div class="item">
+              <a class="ui label">
+                文章数
+                <div class="detail"><%= staticties.articleCount %></div>
+              </a>
+            </div>
+            <div class="item">
+              <a class="ui label">
+                被赞数
+                <div class="detail"><%= staticties.likeCount %></div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%- include('components/article-list', {articles, target: 'person'}) %>
+</div>
+<%- include('footer') %>

@@ -1,0 +1,135 @@
+<%- include('header') %>
+<div class="ui grid">
+    <div class="four wide column"></div>
+    <div class="eight wide column">
+        <form class="ui form segment" method="post">
+            <div class="field required">
+                <label>用户名</label>
+                <input placeholder="用户名" type="text" name="username">
+                <div class="ui pointing red basic label">
+                  用户名已存在
+                </div>
+            </div>
+            <div class="field required">
+                <label>密码</label>
+                <input placeholder="密码" type="password" name="password">
+            </div>
+            <div class="field required">
+                <label>重复密码</label>
+                <input placeholder="重复密码" type="password" name="repassword">
+            </div>
+            <div class="field required">
+                <label>性别</label>
+                <select class="ui compact selection dropdown" style="padding: 5px 0;" name="gender">
+                    <option value="1">男</option>
+                    <option value="2">女</option>
+                    <option value="3">保密</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>头像</label>
+                <input id="avatar" type="file" name="avatar">
+                <div class="img-box">
+                  <img class="preview" src="" alt="">
+                </div>
+            </div>
+            <div class="field">
+                <label>个人签名</label>
+                <textarea name="sign" rows="5"></textarea>
+            </div>
+            <input type="submit" class="ui button green fluid submit" value="注册">
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+  // 同名用户名校验
+  $('input[name=username]').blur(function () {
+    var that = this
+    var name = $(this).val()
+    $.ajax({
+      url: '/signup/findUser',
+      data: {
+        username: name
+      },
+      type: "POST",
+      dataType: 'json',
+      success: function (res) {
+        if (res.code === 1) {
+          $(that).parent().addClass('error')
+          $('.submit').addClass('disabled')
+          $(that).next('div').fadeIn()
+        } else {
+          $(that).parent().removeClass('error')
+          $('.submit').removeClass('disabled')
+          $(that).next('div').fadeOut()
+        }
+      }
+    })
+  })
+
+  // 头像转换
+  $('#avatar').change(function(){
+    if (this.files.length != 0) {
+      var file = this.files[0],
+        reader = new FileReader();
+      if (!reader) {
+        this.value = '';
+        return;
+      };
+      if (!/image/g.test(file.type)) {
+        $('<div>请上传图片文件</div>').toast(3000)
+        $('#avatar').val('')
+        $('form .preview').attr('src', '')
+        $('form .preview').fadeOut()
+        return 0
+      }
+      reader.onload = function (e) {
+        this.value = '';
+        $('form .preview').attr('src', e.target.result)
+        $('form .preview').fadeIn()
+      };
+      reader.readAsDataURL(file);
+    };
+  })
+
+  // 这里必须用异步上传，实时反馈错误
+  $('.form').submit(function (e) {
+    e.stopPropagation()
+    e.preventDefault()
+  	if ($.trim($('input[name=username]').val()) == '') {
+  		$('<div>请输入用户名</div>').toast(3000)
+  	}else if($('input[name=username]').val().match(/[<'">]/g)){
+      $('<div>请输入合法字符！</div>').toast(3000)
+  	}else if($('#avatar').val() == ''){
+      $('<div>头像不能为空</div>').toast(3000)
+  	}else{
+  		$.ajax({
+  			url: "/signup",
+  			data: {
+  				username: $('input[name=username]').val(),
+  				password: $('input[name=password]').val(),
+  				repassword: $('input[name=repassword]').val(),
+          gender: $('[name=gender]').val(),
+  				avatar: $('form .preview').attr('src'),
+          sign: $('[name=sign]').val()
+  			},
+  			type: "POST",
+  			cache: false,
+  			dataType: 'json',
+  			success: function (res) {
+  			   if (res.code === -1) {
+             $('<div>' + res.msg + '</div>').toast(3000)
+           } else {
+             $('<div>' + res.msg + '</div>').toast(2000, function () {
+               location.href = '/'
+             })
+           }
+  			},
+  			error: function (err) {
+          $('<div>' + JSON.stringify(err) + '</div>').toast()
+  			}
+  		})
+  	}
+  })
+</script>
+<%- include('footer') %>

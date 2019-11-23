@@ -1,0 +1,121 @@
+<div class="nav">
+    <div class="ui container">
+      <div class="ui secondary menu">
+        <a class="item active" href="/">
+          Home
+        </a>
+        <a class="item">
+          Messages
+        </a>
+        <a class="item">
+          Friends
+        </a>
+        <div class="right menu">
+          <% if (app.session.userInfo) { %>
+          <div class="item transition-extend-hover">
+            <a href="/article/create"><i class="edit outline icon"></i></a>
+          </div>
+          <div class="item ui inline dropdown">
+            <div class="text">
+              <% if (app.session.userInfo.source === 'github') { %>
+              <img class="avatar" src="<%= app.session.userInfo.avatar %>" alt="">
+              <% } else if (app.session.userInfo.source === 'native') { %>
+              <img class="avatar" src="/img/<%= app.session.userInfo.avatar %>" alt="">
+              <% } %>
+            </div>
+            <div class="menu" style="display: none">
+              <div class="item">
+                <a href="/updateUser">个人信息</a>
+              </div>
+              <% if (app.session.userInfo.source === 'native') { %>
+              <div class="item">
+                <a onclick="updatePassword(event)">修改密码</a>
+              </div>
+              <% } %>
+              <div class="item">
+                <a href="/article/author/<%= app.session.userInfo.username %>">我的文章</a>
+              </div>
+              <div class="item">
+                <a href="/signin/logout">退出</a>
+              </div>
+            </div>
+            <% if (app.session.userInfo.source === 'native') { %>
+            <div class="ui dimmer modals page transition">
+              <div class="ui mini test password-modal modal transition hidden">
+                <div class="header">修改密码</div>
+                <div class="content">
+                  <div class="ui form">
+                    <div class="inline fields">
+                      <div class="sixteen wide field">
+                        <label style="width: 6em">新密码</label>
+                        <input type="password" name="password" placeholder="请输入新密码...">
+                      </div>
+                    </div>
+                    <div class="inline fields">
+                      <div class="sixteen wide field">
+                        <label style="width: 6em">重复密码</label>
+                        <input type="password" name="repeatpassword" placeholder="再次输入密码...">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <div class="cancelPasswordModal ui red button">
+                    取消
+                  </div>
+                  <div id="updatePassword" class="ui green button">
+                    确定
+                  </div>
+                </div>
+              </div>
+            </div>
+            <script type="text/javascript">
+              function updatePassword () {
+                $('.password-modal.mini.modal').modal('show')
+              }
+              $('.cancelPasswordModal').click(function () {
+                $('.password-modal.mini.modal').modal('hide')
+              })
+              $('#updatePassword').click(function () {
+                if ($('[name=password]').val() !== $('[name=repeatpassword]').val()) {
+                  $('<div>两次密码输入不一致</div>').toast(3000)
+                  return 0
+                }
+                $.ajax({
+                  url: '/updateUser/updatePassword',
+                  data: {
+                    password: $('[name=password]').val()
+                  },
+                  dataType: 'json',
+                  type: 'post',
+                  success: function (res) {
+                    if (res.code === 1) {
+                      $('.password-modal.mini.modal').modal('hide')
+                    }
+                    $('<div>' + res.msg + '</div>').toast(3000)
+                  }
+                })
+              })
+            </script>
+            <% } %>
+          </div>
+          <% } else { %>
+          <div class="item">
+            <a href="/signin">登录</a>
+          </div>
+          <div class="item">
+            <a href="/signup">注册</a>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+</div>
+<script type="text/javascript">
+  $('.nav .dropdown').mouseenter(function (e) {
+    $(this).children('.menu').fadeIn(350)
+  })
+  $('.nav .dropdown').mouseleave(function (e) {
+    $(this).children('.menu').fadeOut(350)
+  })
+</script>
